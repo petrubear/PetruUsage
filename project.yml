@@ -1,0 +1,42 @@
+name: PetruUsage
+options:
+  bundleIdPrefix: com.petru
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "16.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+
+targets:
+  PetruUsage:
+    type: application
+    platform: macOS
+    sources:
+      - PetruUsage
+    settings:
+      base:
+        INFOPLIST_FILE: PetruUsage/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.petru.PetruUsage
+        PRODUCT_NAME: PetruUsage
+        CODE_SIGN_ENTITLEMENTS: ""
+        ENABLE_APP_SANDBOX: NO
+        SWIFT_STRICT_CONCURRENCY: targeted
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
+    dependencies:
+      - sdk: libsqlite3.tbd
+
+  PetruUsageTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - PetruUsageTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.petru.PetruUsageTests
+        PRODUCT_NAME: PetruUsageTests
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: PetruUsage
