@@ -1,8 +1,8 @@
 # Technical Debt Registry
 
-**Last Updated:** February 16, 2026
-**Total Items:** 35
-**Critical (P0):** 10
+**Last Updated:** February 17, 2026
+**Total Items:** 29
+**Critical (P0):** 4
 
 ## Priority Definitions
 
@@ -17,53 +17,32 @@
 
 ## P0 - Critical
 
-### DEBT-006: Antigravity provider adapter not working
+### DEBT-006: Gemini (formerly Antigravity) provider adapter — RESOLVED
 - **Location:** `PetruUsage/Infrastructure/Providers/Antigravity/AntigravityUsageAdapter.swift`
 - **Added:** February 16, 2026
-- **Impact:** Antigravity provider fails to fetch usage data at runtime; users see an error instead of per-model Gemini quotas
-- **Proposed Fix:** Debug credential loading (SQLite queries, protobuf decoding, Google OAuth refresh) and Cloud Code API calls against a live Antigravity installation; compare behavior with the OpenUsage reference plugin
-- **Estimated Effort:** 4 hours
+- **Resolved:** February 17, 2026
+- **Resolution:** Fixed DB path to `~/Library/Application Support/Antigravity/User/globalStorage/state.vscdb`, corrected proto nesting (outer field 6 → inner), fixed Data slice indexing crash, fixed SQLite WAL-mode read. Working at runtime with live credentials
 
-### DEBT-007: Kiro provider adapter not working
-- **Location:** `PetruUsage/Infrastructure/Providers/Kiro/KiroUsageAdapter.swift`
-- **Added:** February 16, 2026
-- **Impact:** Kiro provider fails to fetch usage data at runtime; users see an error instead of cached usage breakdowns
-- **Proposed Fix:** Debug SQLite query against live Kiro `state.vscdb`; verify the key `kiro.resourceNotifications.usageState` exists and its JSON structure matches the expected `usageBreakdowns` schema; check token log fallback path
-- **Estimated Effort:** 3 hours
-
-### DEBT-008: Cursor provider adapter not working
+### DEBT-008: Cursor provider adapter — hidden from UI, needs account investigation
 - **Location:** `PetruUsage/Infrastructure/Providers/Cursor/CursorUsageAdapter.swift`
 - **Added:** February 16, 2026
-- **Impact:** Cursor provider fails to fetch usage data at runtime; users see an error instead of plan usage and credit grants
-- **Proposed Fix:** Debug SQLite credential loading from `state.vscdb`, JWT decoding of the access token, token refresh flow, and Connect protocol API calls; compare with the OpenUsage reference plugin
-- **Estimated Effort:** 4 hours
+- **Updated:** February 17, 2026
+- **Impact:** Cursor provider returns `planUsage` from API but `limit` field can't be extracted. Logging added but values are privacy-redacted by Apple
+- **Status:** Code preserved with logging and improved error handling. Hidden from UI via `Provider.visibleCases`. API returns 200 with `planUsage` (5 fields) but `flexDouble(planUsage["limit"])` returns nil — likely a plan/account-specific issue
+- **Remaining:** Test with a different Cursor account; inspect raw API response by writing to temp file (bypasses os_log privacy redaction)
 
-### DEBT-009: Missing Enterprise account handling in Cursor adapter
-- **Location:** `PetruUsage/Infrastructure/Providers/Cursor/CursorUsageAdapter.swift:62-82`
-- **Added:** February 16, 2026
-- **Impact:** Enterprise Cursor users get "No active Cursor subscription" error because the adapter doesn't detect Enterprise accounts and switch to the REST usage API
-- **Proposed Fix:** Port the `buildEnterpriseResult` logic from the reference plugin (plugin.js lines 156-221) — detect Enterprise when `!usage.planUsage && planName == "enterprise"`, then call `https://cursor.com/api/usage` with session cookie
-- **Estimated Effort:** 3 hours
-
-### DEBT-010: Missing LS (Language Server) probing in Antigravity adapter
+### DEBT-010: Missing LS (Language Server) probing in Gemini adapter
 - **Location:** `PetruUsage/Infrastructure/Providers/Antigravity/AntigravityUsageAdapter.swift`
 - **Added:** February 16, 2026
 - **Impact:** The adapter only uses the Cloud Code API, missing the higher-quality data available from the local Language Server. The reference plugin tries LS first (probing ports on 127.0.0.1) and only falls back to Cloud Code
 - **Proposed Fix:** Port `discoverLs()`, `findWorkingPort()`, `probeLs()`, and `callLs()` from the reference plugin (plugin.js lines 178-425) — discover the `language_server_macos` process, probe its ports, and query `GetUserStatus` / `GetCommandModelConfigs`
 - **Estimated Effort:** 6 hours
 
-### DEBT-011: Cursor adapter billingCycleEnd type mismatch
-- **Location:** `PetruUsage/Infrastructure/Providers/Cursor/CursorUsageAdapter.swift:183-185`
-- **Added:** February 16, 2026
-- **Impact:** `billingCycleEnd` is cast as `String` but the API returns it as a number (milliseconds). Date parsing silently fails, so billing cycle end / reset timer is never shown
-- **Proposed Fix:** Cast as `Double` or `NSNumber` instead of `String`: `if let cycleEnd = usage["billingCycleEnd"] as? Double` (matching reference plugin.js line 374: `Number(usage.billingCycleEnd)`)
-- **Estimated Effort:** 30 minutes
-
 ### DEBT-012: Cursor adapter planUsage values may be off by 100x
-- **Location:** `PetruUsage/Infrastructure/Providers/Cursor/CursorUsageAdapter.swift:174-195`
+- **Location:** `PetruUsage/Infrastructure/Providers/Cursor/CursorUsageAdapter.swift:352-394`
 - **Added:** February 16, 2026
 - **Impact:** Plan usage values are divided by 100 assuming cents, but the API may return values in different scales depending on version. The reference plugin uses `ctx.fmt.dollars()` which has its own scaling
-- **Proposed Fix:** Inspect actual API responses and determine correct scaling. Add unit test with sample API data
+- **Proposed Fix:** Inspect actual API responses (now logged) and determine correct scaling. Add unit test with sample API data
 - **Estimated Effort:** 1 hour
 
 ### DEBT-013: RefreshUsageUseCase callback not MainActor-safe
@@ -72,20 +51,6 @@
 - **Impact:** The `onUpdate` callback executes on a background thread but updates `@MainActor` properties in `UsageViewModel`. The ViewModel wraps it in `Task { @MainActor ... }` but this creates a gap where concurrent fetches could interleave
 - **Proposed Fix:** Mark the `onUpdate` parameter as `@MainActor @Sendable` or restructure to return results and let the ViewModel update itself
 - **Estimated Effort:** 1 hour
-
-### DEBT-014: Missing User-Agent headers on all provider API requests
-- **Location:** `ClaudeUsageAdapter.swift:143`, `CodexUsageAdapter.swift:150`, `AntigravityUsageAdapter.swift:148`, `CursorUsageAdapter.swift:100`
-- **Added:** February 16, 2026
-- **Impact:** Some servers may reject requests or serve different responses without User-Agent. All reference plugins include User-Agent headers (e.g., `"User-Agent": "OpenUsage"` or `"User-Agent": "antigravity"`)
-- **Proposed Fix:** Add `"User-Agent": "PetruUsage"` to all HTTP requests in each adapter
-- **Estimated Effort:** 30 minutes
-
-### DEBT-015: Claude adapter missing plan/subscription display
-- **Location:** `PetruUsage/Infrastructure/Providers/Claude/ClaudeUsageAdapter.swift:234`
-- **Added:** February 16, 2026
-- **Impact:** Always returns `plan: nil` so the user's subscription tier (Pro, Team, etc.) is never shown. The reference plugin (plugin.js lines 342-348) extracts plan from `creds.oauth.subscriptionType`
-- **Proposed Fix:** Parse `subscriptionType` from the credential JSON's `claudeAiOauth` object and pass it as the plan label
-- **Estimated Effort:** 30 minutes
 
 ---
 
@@ -99,32 +64,11 @@
 - **Estimated Effort:** 3 hours
 
 ### DEBT-002: SQL injection risk in SQLite queries
-- **Location:** `CursorUsageAdapter.swift:90`, `KiroUsageAdapter.swift:35`, `AntigravityUsageAdapter.swift:68-88`
+- **Location:** `CursorUsageAdapter.swift:138`, `KiroUsageAdapter.swift:35`, `AntigravityUsageAdapter.swift:173-175`
 - **Added:** February 16, 2026
 - **Impact:** SQLite keys are currently hardcoded strings so this is safe in practice, but the pattern of string-interpolated SQL is fragile and could become a real vulnerability if keys ever come from user input
 - **Proposed Fix:** Add parameterized query support to `SQLiteService` using `sqlite3_bind_text`, update all callers
 - **Estimated Effort:** 3 hours
-
-### DEBT-016: Cursor adapter missing "shouldLogout" handling
-- **Location:** `PetruUsage/Infrastructure/Providers/Cursor/CursorUsageAdapter.swift:133-145`
-- **Added:** February 16, 2026
-- **Impact:** The adapter doesn't check for `shouldLogout: true` in refresh responses. The reference plugin (plugin.js lines 107-111) checks this and throws a specific re-auth message
-- **Proposed Fix:** After parsing refresh response, check `body.shouldLogout == true` and throw `ProviderError.authExpired("Session expired. Sign in via Cursor app.")`
-- **Estimated Effort:** 30 minutes
-
-### DEBT-017: Antigravity adapter missing token cache
-- **Location:** `PetruUsage/Infrastructure/Providers/Antigravity/AntigravityUsageAdapter.swift`
-- **Added:** February 16, 2026
-- **Impact:** No caching of refreshed Google OAuth tokens between fetch cycles, causing unnecessary token refreshes and API calls. The reference plugin (plugin.js lines 150-174) caches tokens in a file with expiration
-- **Proposed Fix:** Cache refreshed access token and its expiration in UserDefaults or a file, check cache before refreshing
-- **Estimated Effort:** 1 hour
-
-### DEBT-018: Unsafe force-unwrap in Antigravity token expiry check
-- **Location:** `PetruUsage/Infrastructure/Providers/Antigravity/AntigravityUsageAdapter.swift:38`
-- **Added:** February 16, 2026
-- **Impact:** `proto.expirySeconds!` force-unwraps after a nil check, but in a compound `||` condition. While logically safe (short-circuit), it's fragile and could crash if refactored
-- **Proposed Fix:** Use `if let` or optional map: `proto.expirySeconds.map({ $0 > Date().timeIntervalSince1970 }) ?? true`
-- **Estimated Effort:** 15 minutes
 
 ### DEBT-019: TokenRefreshService is dead code
 - **Location:** `PetruUsage/Application/Services/TokenRefreshService.swift`
@@ -141,11 +85,13 @@
 - **Estimated Effort:** 1 hour
 
 ### DEBT-021: Silent token refresh errors across all adapters
-- **Location:** `ClaudeUsageAdapter.swift:24-27`, `CursorUsageAdapter.swift:38-42`, `CodexUsageAdapter.swift:24-29`
+- **Location:** `ClaudeUsageAdapter.swift:24-27`, `CodexUsageAdapter.swift:24-29`
 - **Added:** February 16, 2026
-- **Impact:** All adapters use `try?` to silently swallow refresh errors. Users see generic errors without knowing the refresh specifically failed. Reference plugins log these failures
-- **Proposed Fix:** Log refresh failures (os_log or print for debug builds), and propagate specific error messages (e.g., "Token refresh failed: invalid_grant") to the UI
-- **Estimated Effort:** 2 hours
+- **Updated:** February 17, 2026
+- **Impact:** Claude and Codex adapters use `try?` to silently swallow refresh errors. Users see generic errors without knowing the refresh specifically failed
+- **Status:** Partially addressed — Cursor and Antigravity adapters now have `os.Logger` tracing for refresh failures. Claude and Codex still need logging
+- **Proposed Fix:** Add `os.Logger` to Claude and Codex adapters
+- **Estimated Effort:** 1 hour
 
 ---
 
@@ -166,18 +112,11 @@
 - **Estimated Effort:** 1 hour
 
 ### DEBT-022: Direct FileManager access in adapters without port abstraction
-- **Location:** `ClaudeUsageAdapter.swift:53-58`, `CodexUsageAdapter.swift:131-147`, `KiroUsageAdapter.swift:86-92`
+- **Location:** `ClaudeUsageAdapter.swift:53-58`, `CodexUsageAdapter.swift:131-147`, `KiroUsageAdapter.swift:86-92`, `AntigravityUsageAdapter.swift`
 - **Added:** February 16, 2026
 - **Impact:** Adapters use `FileManager.default` directly, bypassing the hexagonal architecture. Makes credential loading untestable without real files on disk
 - **Proposed Fix:** Create a `FileSystemPort` protocol with `fileExists(atPath:)`, `contents(atPath:)` methods; inject into adapters
 - **Estimated Effort:** 2 hours
-
-### DEBT-023: ProtobufDecoder inline in Antigravity adapter
-- **Location:** `PetruUsage/Infrastructure/Providers/Antigravity/AntigravityUsageAdapter.swift:288-356`
-- **Added:** February 16, 2026
-- **Impact:** Protobuf varint decoder is defined in the same file as business logic, with unexplained magic field numbers (1, 3, 4, 6). Hard to test independently
-- **Proposed Fix:** Extract `ProtobufDecoder` to its own file under `Presentation/Helpers/` or `Infrastructure/`, add comments explaining the protobuf schema fields, and add unit tests
-- **Estimated Effort:** 1 hour
 
 ### DEBT-024: ISO8601DateFormatter created on every call
 - **Location:** `CodexUsageAdapter.swift`, `AntigravityUsageAdapter.swift`, `KiroUsageAdapter.swift`
@@ -267,17 +206,20 @@
 - **Proposed Fix:** Remove the redundant `sqlite3_close(db)` from the error path since `defer` won't run and `db` is nil
 - **Estimated Effort:** 5 minutes
 
-### DEBT-035: No logging infrastructure
-- **Location:** Project-wide
-- **Added:** February 16, 2026
-- **Impact:** No `os_log` or `Logger` usage anywhere. All errors are silently swallowed or returned as strings. Makes debugging production issues very difficult
-- **Proposed Fix:** Add `os.Logger` instances per adapter/service for structured logging with appropriate log levels
-- **Estimated Effort:** 2 hours
-
 ---
 
 ## Resolved Debt (Last 30 Days)
 
 | ID | Title | Resolved | Resolution |
 |----|-------|----------|------------|
-| - | - | - | - |
+| DEBT-007 | Kiro provider adapter not working | Feb 17, 2026 | User confirmed working fine |
+| DEBT-009 | Cursor missing Enterprise handling | Feb 17, 2026 | Already implemented in adapter |
+| DEBT-011 | Cursor billingCycleEnd type mismatch | Feb 17, 2026 | Replaced with `flexDouble()` helper |
+| DEBT-014 | Missing User-Agent headers | Feb 17, 2026 | All adapters now include `User-Agent: PetruUsage` |
+| DEBT-015 | Claude adapter missing plan display | Feb 17, 2026 | User confirmed Claude working fine |
+| DEBT-016 | Cursor missing shouldLogout handling | Feb 17, 2026 | Already implemented in adapter |
+| DEBT-017 | Antigravity missing token cache | Feb 17, 2026 | Already implemented, noted as resolved |
+| DEBT-018 | Unsafe force-unwrap in Antigravity | Feb 17, 2026 | Removed with Gemini CLI credential rewrite |
+| DEBT-023 | ProtobufDecoder inline | Feb 17, 2026 | Restored as minimal inline wire-format decoder (~40 lines) matching reference plugin |
+| DEBT-006 | Gemini adapter not working | Feb 17, 2026 | Fixed DB path, proto nesting, Data slice indexing, SQLite WAL mode |
+| DEBT-035 | No logging infrastructure | Feb 17, 2026 | Added `os.Logger` to Antigravity and Cursor adapters |

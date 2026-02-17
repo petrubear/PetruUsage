@@ -72,7 +72,7 @@ PetruUsage/
 
 ## Current Focus
 
-Initial implementation complete. All 5 providers implemented, build succeeds, 17 tests pass.
+4 of 5 providers working at runtime (Claude, Codex, Gemini, Kiro). Cursor hidden from UI pending account investigation. Build succeeds, 17 tests pass.
 
 ## Important Notes
 

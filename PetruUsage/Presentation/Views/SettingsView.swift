@@ -6,7 +6,7 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section("Providers") {
-                ForEach(Provider.allCases) { provider in
+                ForEach(Provider.visibleCases) { provider in
                     Toggle(isOn: Binding(
                         get: { viewModel.isProviderEnabled(provider) },
                         set: { viewModel.setProviderEnabled(provider, enabled: $0) }

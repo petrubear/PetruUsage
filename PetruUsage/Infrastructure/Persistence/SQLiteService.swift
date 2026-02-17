@@ -6,7 +6,10 @@ final class SQLiteService: SQLitePort {
         let expandedPath = NSString(string: dbPath).expandingTildeInPath
 
         var db: OpaquePointer?
-        let openFlags = SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX
+        // Use READWRITE instead of READONLY to support WAL-mode databases
+        // whose -shm file may be held by another process (e.g., Cursor, VS Code).
+        // We never write — this just lets SQLite access the WAL correctly.
+        let openFlags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX
         let rc = sqlite3_open_v2(expandedPath, &db, openFlags, nil)
         guard rc == SQLITE_OK, let db else {
             let msg = db.map { String(cString: sqlite3_errmsg($0)) } ?? "unknown error"

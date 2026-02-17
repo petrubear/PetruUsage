@@ -22,18 +22,18 @@ final class UsageViewModel {
         self.refreshUseCase = refreshUseCase
         self.settings = settings
 
-        // Initialize all providers
-        for provider in Provider.allCases {
+        // Initialize visible providers
+        for provider in Provider.visibleCases {
             providerStatuses[provider] = settings.isProviderEnabled(provider) ? .idle : .disabled
         }
     }
 
     var enabledProviders: [Provider] {
-        Provider.allCases.filter { settings.isProviderEnabled($0) }
+        Provider.visibleCases.filter { settings.isProviderEnabled($0) }
     }
 
     var sortedProviders: [Provider] {
-        Provider.allCases.filter { !(providerStatuses[$0]?.isDisabled ?? false) }
+        Provider.visibleCases.filter { !(providerStatuses[$0]?.isDisabled ?? false) }
     }
 
     func startAutoRefresh() {
@@ -74,7 +74,7 @@ final class UsageViewModel {
     }
 
     func updateProviderVisibility() {
-        for provider in Provider.allCases {
+        for provider in Provider.visibleCases {
             if !settings.isProviderEnabled(provider) {
                 providerStatuses[provider] = .disabled
             } else if providerStatuses[provider]?.isDisabled == true {

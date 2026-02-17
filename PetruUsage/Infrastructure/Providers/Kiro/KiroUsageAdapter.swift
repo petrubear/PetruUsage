@@ -6,7 +6,8 @@ final class KiroUsageAdapter: UsageFetchingPort {
     private let sqlite: SQLitePort
 
     private let stateDB = "~/Library/Application Support/Kiro/User/globalStorage/state.vscdb"
-    private let usageStateKey = "kiro.resourceNotifications.usageState"
+    private let stateKey = "kiro.kiroAgent"
+    private let usageStateField = "kiro.resourceNotifications.usageState"
     private let tokenLogPath = "~/Library/Application Support/Kiro/User/globalStorage/kiro.kiroagent/dev_data/tokens_generated.jsonl"
 
     init(sqlite: SQLitePort) {
@@ -32,13 +33,14 @@ final class KiroUsageAdapter: UsageFetchingPort {
     private func loadCachedUsage() throws -> ProviderUsageResult {
         let rows = try sqlite.query(
             dbPath: stateDB,
-            sql: "SELECT value FROM ItemTable WHERE key = '\(usageStateKey)' LIMIT 1;"
+            sql: "SELECT value FROM ItemTable WHERE key = '\(stateKey)' LIMIT 1;"
         )
 
         guard let value = rows.first?["value"],
               let data = value.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let breakdowns = json["usageBreakdowns"] as? [[String: Any]],
+              let rootJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let usageState = rootJson[usageStateField] as? [String: Any],
+              let breakdowns = usageState["usageBreakdowns"] as? [[String: Any]],
               !breakdowns.isEmpty else {
             throw ProviderError.invalidResponse
         }
@@ -50,15 +52,16 @@ final class KiroUsageAdapter: UsageFetchingPort {
                   let percentageUsed = breakdown["percentageUsed"] as? Double else { continue }
 
             let usageLimit = breakdown["usageLimit"] as? Int
+            let currentUsage = breakdown["currentUsage"] as? Double
             let resetDate = (breakdown["resetDate"] as? String).flatMap { ISO8601DateFormatter().date(from: $0) }
 
             if let limit = usageLimit, limit > 0 {
-                let used = percentageUsed / 100 * Double(limit)
+                let used = currentUsage ?? (percentageUsed / 100 * Double(limit))
                 lines.append(.progress(ProgressMetric(
                     label: displayName,
                     used: used,
                     limit: Double(limit),
-                    format: .count(suffix: "requests"),
+                    format: .count(suffix: "invocations"),
                     resetsAt: resetDate,
                     periodDuration: nil
                 )))
@@ -96,9 +99,10 @@ final class KiroUsageAdapter: UsageFetchingPort {
 
         for line in jsonLines {
             guard let data = line.data(using: .utf8),
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let tokens = json["tokens_generated"] as? Int else { continue }
-            totalTokens += tokens
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { continue }
+            let prompt = json["promptTokens"] as? Int ?? 0
+            let generated = json["generatedTokens"] as? Int ?? 0
+            totalTokens += prompt + generated
         }
 
         let lines: [MetricLine] = [

@@ -50,7 +50,7 @@ struct MenuBarView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
             }
-            .frame(maxHeight: 500)
+            .frame(maxHeight: .infinity)
 
             // Footer
             if let lastRefreshed = viewModel.lastRefreshed {
@@ -74,7 +74,7 @@ struct MenuBarView: View {
             .buttonStyle(.borderless)
             .padding(.vertical, 8)
         }
-        .frame(width: 320)
+        .frame(width: 340, height: 700)
         .onAppear {
             if viewModel.lastRefreshed == nil {
                 viewModel.refreshAll()

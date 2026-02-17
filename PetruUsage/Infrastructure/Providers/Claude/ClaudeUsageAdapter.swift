@@ -43,7 +43,7 @@ final class ClaudeUsageAdapter: UsageFetchingPort {
             throw ProviderError.httpError(response.statusCode)
         }
 
-        return try parseUsageResponse(response.data)
+        return try parseUsageResponse(response.data, subscriptionType: credential.subscriptionType)
     }
 
     // MARK: - Credentials
@@ -78,12 +78,14 @@ final class ClaudeUsageAdapter: UsageFetchingPort {
         let expiresAt: Date? = (oauth["expiresAt"] as? Double).map {
             Date(timeIntervalSince1970: $0 / 1000)
         }
+        let subscriptionType = oauth["subscriptionType"] as? String
 
         return OAuthCredential(
             accessToken: accessToken,
             refreshToken: refreshToken,
             expiresAt: expiresAt,
-            source: source
+            source: source,
+            subscriptionType: subscriptionType
         )
     }
 
@@ -105,7 +107,10 @@ final class ClaudeUsageAdapter: UsageFetchingPort {
         let request = HTTPRequest(
             method: "POST",
             url: refreshURL,
-            headers: ["Content-Type": "application/json"],
+            headers: [
+                "Content-Type": "application/json",
+                "User-Agent": "PetruUsage",
+            ],
             body: bodyData,
             timeoutInterval: 15
         )
@@ -148,6 +153,7 @@ final class ClaudeUsageAdapter: UsageFetchingPort {
                 "Accept": "application/json",
                 "Content-Type": "application/json",
                 "anthropic-beta": "oauth-2025-04-20",
+                "User-Agent": "PetruUsage",
             ],
             timeoutInterval: 10
         )
@@ -155,7 +161,7 @@ final class ClaudeUsageAdapter: UsageFetchingPort {
         return try await httpClient.execute(request)
     }
 
-    private func parseUsageResponse(_ data: Data) throws -> ProviderUsageResult {
+    private func parseUsageResponse(_ data: Data, subscriptionType: String?) throws -> ProviderUsageResult {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw ProviderError.invalidResponse
         }
@@ -231,7 +237,19 @@ final class ClaudeUsageAdapter: UsageFetchingPort {
             lines.append(.badge(BadgeMetric(label: "Status", text: "No usage data", color: "#a3a3a3")))
         }
 
-        return ProviderUsageResult(provider: .claude, plan: nil, lines: lines)
+        let plan = subscriptionType.flatMap { formatPlanLabel($0) }
+        return ProviderUsageResult(provider: .claude, plan: plan, lines: lines)
+    }
+
+    private func formatPlanLabel(_ name: String) -> String? {
+        guard !name.isEmpty else { return nil }
+        let lowered = name.lowercased()
+        if lowered.contains("pro") { return "Pro" }
+        if lowered.contains("max") { return "Max" }
+        if lowered.contains("team") { return "Team" }
+        if lowered.contains("enterprise") { return "Enterprise" }
+        if lowered.contains("free") { return "Free" }
+        return name.prefix(1).uppercased() + name.dropFirst()
     }
 
     // MARK: - Hex Decode

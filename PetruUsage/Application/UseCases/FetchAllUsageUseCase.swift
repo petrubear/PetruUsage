@@ -10,7 +10,7 @@ final class FetchAllUsageUseCase {
     }
 
     func execute() async -> [Provider: ProviderStatus] {
-        let enabledProviders = Provider.allCases.filter { settings.isProviderEnabled($0) }
+        let enabledProviders = Provider.visibleCases.filter { settings.isProviderEnabled($0) }
         let adapters: [(Provider, UsageFetchingPort)] = enabledProviders.compactMap { provider in
             guard let adapter = registry.adapter(for: provider) else { return nil }
             return (provider, adapter)
@@ -33,7 +33,7 @@ final class FetchAllUsageUseCase {
             var results: [Provider: ProviderStatus] = [:]
 
             // Mark disabled providers
-            for provider in Provider.allCases where !enabledProviders.contains(provider) {
+            for provider in Provider.visibleCases where !enabledProviders.contains(provider) {
                 results[provider] = .disabled
             }
 

@@ -116,7 +116,10 @@ final class CodexUsageAdapter: UsageFetchingPort {
         let request = HTTPRequest(
             method: "POST",
             url: refreshURL,
-            headers: ["Content-Type": "application/x-www-form-urlencoded"],
+            headers: [
+                "Content-Type": "application/x-www-form-urlencoded",
+                "User-Agent": "PetruUsage",
+            ],
             body: bodyString.data(using: .utf8),
             timeoutInterval: 15
         )
@@ -151,6 +154,7 @@ final class CodexUsageAdapter: UsageFetchingPort {
         var headers: [String: String] = [
             "Authorization": "Bearer \(accessToken)",
             "Accept": "application/json",
+            "User-Agent": "PetruUsage",
         ]
         if let accountId {
             headers["ChatGPT-Account-Id"] = accountId

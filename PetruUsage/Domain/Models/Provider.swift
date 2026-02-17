@@ -14,7 +14,7 @@ enum Provider: String, CaseIterable, Identifiable, Codable {
         case .claude: "Claude"
         case .cursor: "Cursor"
         case .codex: "Codex"
-        case .antigravity: "Antigravity"
+        case .antigravity: "Gemini"
         case .kiro: "Kiro"
         }
     }
@@ -37,5 +37,10 @@ enum Provider: String, CaseIterable, Identifiable, Codable {
         case .antigravity: "arrow.up.circle"
         case .kiro: "wand.and.stars"
         }
+    }
+
+    /// Providers currently shown in the UI. Cursor is hidden until its API parsing is fixed.
+    static var visibleCases: [Provider] {
+        allCases.filter { $0 != .cursor }
     }
 }

@@ -21,17 +21,17 @@ final class UsageViewModelTests: XCTestCase {
         let (vm, _) = makeViewModel()
         XCTAssertNil(vm.lastRefreshed)
         XCTAssertFalse(vm.isRefreshing)
-        XCTAssertEqual(vm.sortedProviders.count, Provider.allCases.count)
+        XCTAssertEqual(vm.sortedProviders.count, Provider.visibleCases.count)
     }
 
     func testEnabledProviders() {
         let (vm, settings) = makeViewModel()
-        XCTAssertEqual(vm.enabledProviders.count, Provider.allCases.count)
+        XCTAssertEqual(vm.enabledProviders.count, Provider.visibleCases.count)
 
         settings.setProviderEnabled(.kiro, enabled: false)
         vm.updateProviderVisibility()
 
-        XCTAssertEqual(vm.enabledProviders.count, Provider.allCases.count - 1)
+        XCTAssertEqual(vm.enabledProviders.count, Provider.visibleCases.count - 1)
         XCTAssertFalse(vm.enabledProviders.contains(.kiro))
     }
 

@@ -5,6 +5,7 @@ struct OAuthCredential {
     var refreshToken: String?
     var expiresAt: Date?
     let source: CredentialSource
+    var subscriptionType: String? = nil
 
     var isExpired: Bool {
         guard let expiresAt else { return false }

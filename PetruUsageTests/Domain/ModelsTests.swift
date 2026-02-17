@@ -7,7 +7,7 @@ final class ModelsTests: XCTestCase {
         XCTAssertEqual(Provider.claude.displayName, "Claude")
         XCTAssertEqual(Provider.cursor.displayName, "Cursor")
         XCTAssertEqual(Provider.codex.displayName, "Codex")
-        XCTAssertEqual(Provider.antigravity.displayName, "Antigravity")
+        XCTAssertEqual(Provider.antigravity.displayName, "Gemini")
         XCTAssertEqual(Provider.kiro.displayName, "Kiro")
     }
 
