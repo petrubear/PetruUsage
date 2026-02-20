@@ -21,11 +21,11 @@ enum Provider: String, CaseIterable, Identifiable, Codable {
 
     var brandColor: Color {
         switch self {
-        case .claude: Color(red: 0.85, green: 0.45, blue: 0.27)
-        case .cursor: Color(red: 0.0, green: 0.0, blue: 0.0)
-        case .codex: Color(red: 0.0, green: 0.64, blue: 0.52)
-        case .antigravity: Color(red: 0.26, green: 0.52, blue: 0.96)
-        case .kiro: Color(red: 0.56, green: 0.27, blue: 0.96)
+        case .claude:       Color(red: 1.00, green: 0.72, blue: 0.42) // Dracula Orange  #FFB86C
+        case .cursor:       Color(red: 1.00, green: 0.47, blue: 0.78) // Dracula Pink    #FF79C6
+        case .codex:        Color(red: 0.31, green: 0.98, blue: 0.48) // Dracula Green   #50FA7B
+        case .antigravity:  Color(red: 0.55, green: 0.91, blue: 0.99) // Dracula Cyan    #8BE9FD
+        case .kiro:         Color(red: 0.74, green: 0.58, blue: 0.98) // Dracula Purple  #BD93F9
         }
     }
 
