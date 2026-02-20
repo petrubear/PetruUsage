@@ -8,11 +8,32 @@ final class SettingsViewModel {
     private var settings: SettingsPort
     private let onProvidersChanged: () -> Void
     private(set) var enabledProviders: Set<Provider>
+    var theme: AppTheme {
+        didSet {
+            settings.theme = theme
+            NSApp.appearance = Self.appearance(for: theme)
+        }
+    }
 
     init(settings: SettingsPort, onProvidersChanged: @escaping () -> Void) {
         self.settings = settings
         self.onProvidersChanged = onProvidersChanged
         self.enabledProviders = settings.enabledProviders
+        self.theme = settings.theme
+
+        // NSApp is nil during App.init(); defer until the run loop is live
+        let storedTheme = settings.theme
+        DispatchQueue.main.async {
+            NSApp.appearance = Self.appearance(for: storedTheme)
+        }
+    }
+
+    private static func appearance(for theme: AppTheme) -> NSAppearance? {
+        switch theme {
+        case .system: nil
+        case .light:  NSAppearance(named: .aqua)
+        case .dark:   NSAppearance(named: .darkAqua)
+        }
     }
 
     var refreshIntervalMinutes: Double {

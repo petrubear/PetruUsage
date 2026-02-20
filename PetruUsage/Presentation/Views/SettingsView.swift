@@ -39,6 +39,16 @@ struct SettingsView: View {
                 }
             }
 
+            Section("Appearance") {
+                Picker("Theme", selection: $viewModel.theme) {
+                    ForEach(AppTheme.allCases, id: \.self) { theme in
+                        Text(theme.displayName).tag(theme)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+            }
+
             Section("System") {
                 Toggle("Hide from Dock", isOn: Binding(
                     get: { viewModel.hideFromDock },
@@ -59,7 +69,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 350, height: 450)
+        .frame(width: 350, height: 520)
         .navigationTitle("Settings")
     }
 }

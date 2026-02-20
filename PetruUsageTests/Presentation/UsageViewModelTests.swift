@@ -66,6 +66,7 @@ final class MockSettings: SettingsPort {
     var refreshInterval: TimeInterval = 300
     var hideFromDock: Bool = false
     var startOnLogin: Bool = false
+    var theme: AppTheme = .system
 
     func isProviderEnabled(_ provider: Provider) -> Bool {
         enabledProviders.contains(provider)
