@@ -22,20 +22,20 @@ struct SettingsView: View {
             }
 
             Section("Refresh") {
-                HStack {
+                VStack(alignment: .leading, spacing: 6) {
                     Text("Auto-refresh every")
+                        .font(.subheadline)
                     Picker("", selection: Binding(
                         get: { viewModel.refreshIntervalMinutes },
                         set: { viewModel.refreshIntervalMinutes = $0 }
                     )) {
-                        Text("1 min").tag(1.0)
-                        Text("2 min").tag(2.0)
-                        Text("5 min").tag(5.0)
-                        Text("10 min").tag(10.0)
-                        Text("15 min").tag(15.0)
-                        Text("30 min").tag(30.0)
+                        Text("1m").tag(1.0)
+                        Text("5m").tag(5.0)
+                        Text("15m").tag(15.0)
+                        Text("30m").tag(30.0)
                     }
-                    .frame(width: 100)
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
                 }
             }
 

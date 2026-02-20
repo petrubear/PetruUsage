@@ -27,9 +27,13 @@ final class SettingsViewModel {
     }
 
     var startOnLogin: Bool {
-        get { settings.startOnLogin }
+        get {
+            switch SMAppService.mainApp.status {
+            case .enabled, .requiresApproval: return true
+            default: return false
+            }
+        }
         set {
-            settings.startOnLogin = newValue
             do {
                 if newValue {
                     try SMAppService.mainApp.register()
@@ -37,8 +41,8 @@ final class SettingsViewModel {
                     try SMAppService.mainApp.unregister()
                 }
             } catch {
-                // Revert on failure
-                settings.startOnLogin = !newValue
+                // SMAppService.mainApp.status is the source of truth;
+                // the getter will reflect the actual state after this call
             }
         }
     }

@@ -46,9 +46,7 @@ struct PetruUsageApp: App {
 
     var body: some Scene {
         MenuBarExtra {
-            MenuBarView(viewModel: usageViewModel) {
-                openSettings()
-            }
+            MenuBarView(viewModel: usageViewModel)
         } label: {
             Image(systemName: "chart.bar.fill")
                 .font(.system(size: 12))
@@ -63,12 +61,5 @@ struct PetruUsageApp: App {
         .defaultPosition(.center)
     }
 
-    private func openSettings() {
-        NSApp.activate(ignoringOtherApps: true)
-        if let window = NSApp.windows.first(where: { $0.title == "Settings" }) {
-            window.makeKeyAndOrderFront(nil)
-        } else {
-            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-        }
-    }
+
 }

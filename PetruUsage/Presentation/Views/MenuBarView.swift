@@ -2,7 +2,7 @@ import SwiftUI
 
 struct MenuBarView: View {
     @Bindable var viewModel: UsageViewModel
-    let onOpenSettings: () -> Void
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         VStack(spacing: 0) {
@@ -27,7 +27,10 @@ struct MenuBarView: View {
                 .buttonStyle(.borderless)
                 .disabled(viewModel.isRefreshing)
 
-                Button(action: onOpenSettings) {
+                Button {
+                    NSApp.activate(ignoringOtherApps: true)
+                    openWindow(id: "settings")
+                } label: {
                     Image(systemName: "gear")
                         .font(.system(size: 12))
                 }
