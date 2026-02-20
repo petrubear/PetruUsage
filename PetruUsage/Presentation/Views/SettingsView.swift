@@ -49,10 +49,17 @@ struct SettingsView: View {
                     get: { viewModel.startOnLogin },
                     set: { viewModel.startOnLogin = $0 }
                 ))
+
+                Button(role: .destructive) {
+                    NSApplication.shared.terminate(nil)
+                } label: {
+                    Text("Quit PetruUsage")
+                        .frame(maxWidth: .infinity, alignment: .center)
+                }
             }
         }
         .formStyle(.grouped)
-        .frame(width: 350, height: 400)
+        .frame(width: 350, height: 450)
         .navigationTitle("Settings")
     }
 }

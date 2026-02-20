@@ -31,6 +31,7 @@ struct PetruUsageApp: App {
 
         let settingsVM = SettingsViewModel(settings: settings) {
             usageVM.updateProviderVisibility()
+            usageVM.refreshAll()
         }
 
         self._usageViewModel = State(initialValue: usageVM)
