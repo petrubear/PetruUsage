@@ -14,6 +14,7 @@ final class ProviderRegistry {
             .codex: CodexUsageAdapter(httpClient: httpClient, keychain: keychain),
             .antigravity: AntigravityUsageAdapter(httpClient: httpClient, sqlite: sqlite),
             .kiro: KiroUsageAdapter(sqlite: sqlite),
+            .openrouter: OpenRouterAdapter(httpClient: httpClient, keychain: keychain),
         ]
     }
 
