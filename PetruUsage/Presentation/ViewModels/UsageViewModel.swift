@@ -33,7 +33,7 @@ final class UsageViewModel {
     }
 
     var sortedProviders: [Provider] {
-        Provider.visibleCases.filter { !(providerStatuses[$0]?.isDisabled ?? false) }
+        settings.providerOrder.filter { !(providerStatuses[$0]?.isDisabled ?? false) }
     }
 
     func startAutoRefresh() {

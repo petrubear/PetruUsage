@@ -61,6 +61,4 @@ struct PetruUsageApp: App {
         .windowResizability(.contentSize)
         .defaultPosition(.center)
     }
-
-
 }

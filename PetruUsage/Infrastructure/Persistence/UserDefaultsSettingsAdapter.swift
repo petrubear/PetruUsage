@@ -3,6 +3,7 @@ import Foundation
 final class UserDefaultsSettingsAdapter: SettingsPort {
     private let defaults: UserDefaults
     private let enabledProvidersKey = "enabledProviders"
+    private let providerOrderKey = "providerOrder"
     private let refreshIntervalKey = "refreshInterval"
     private let hideFromDockKey = "hideFromDock"
     private let startOnLoginKey = "startOnLogin"
@@ -22,6 +23,25 @@ final class UserDefaultsSettingsAdapter: SettingsPort {
         set {
             defaults.set(newValue.map(\.rawValue), forKey: enabledProvidersKey)
         }
+    }
+
+    var providerOrder: [Provider] {
+        get {
+            guard let rawValues = defaults.array(forKey: providerOrderKey) as? [String] else {
+                return Provider.visibleCases
+            }
+            let saved = rawValues.compactMap { Provider(rawValue: $0) }
+                .filter { Provider.visibleCases.contains($0) }
+            let missing = Provider.visibleCases.filter { !saved.contains($0) }
+            return saved + missing
+        }
+        set {
+            defaults.set(newValue.map(\.rawValue), forKey: providerOrderKey)
+        }
+    }
+
+    func setProviderOrder(_ order: [Provider]) {
+        providerOrder = order
     }
 
     var refreshInterval: TimeInterval {

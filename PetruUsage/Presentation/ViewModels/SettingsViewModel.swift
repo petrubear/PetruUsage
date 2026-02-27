@@ -8,6 +8,7 @@ final class SettingsViewModel {
     private var settings: SettingsPort
     private let onProvidersChanged: () -> Void
     private(set) var enabledProviders: Set<Provider>
+    var orderedVisibleProviders: [Provider]
     var theme: AppTheme {
         didSet {
             settings.theme = theme
@@ -19,6 +20,7 @@ final class SettingsViewModel {
         self.settings = settings
         self.onProvidersChanged = onProvidersChanged
         self.enabledProviders = settings.enabledProviders
+        self.orderedVisibleProviders = settings.providerOrder
         self.theme = settings.theme
 
         // NSApp is nil during App.init(); defer until the run loop is live
@@ -77,6 +79,12 @@ final class SettingsViewModel {
     func setProviderEnabled(_ provider: Provider, enabled: Bool) {
         settings.setProviderEnabled(provider, enabled: enabled)
         enabledProviders = settings.enabledProviders
+        onProvidersChanged()
+    }
+
+    func moveProviders(from source: IndexSet, to destination: Int) {
+        orderedVisibleProviders.move(fromOffsets: source, toOffset: destination)
+        settings.setProviderOrder(orderedVisibleProviders)
         onProvidersChanged()
     }
 }

@@ -6,37 +6,34 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section("Providers") {
-                ForEach(Provider.visibleCases) { provider in
+                ForEach(viewModel.orderedVisibleProviders) { provider in
                     Toggle(isOn: Binding(
                         get: { viewModel.isProviderEnabled(provider) },
                         set: { viewModel.setProviderEnabled(provider, enabled: $0) }
                     )) {
-                        HStack(spacing: 6) {
+                        HStack(spacing: 8) {
                             Image(systemName: provider.iconName)
                                 .foregroundStyle(provider.brandColor)
                                 .frame(width: 20)
                             Text(provider.displayName)
                         }
                     }
+                    .toggleStyle(.switch)
                 }
+                .onMove { viewModel.moveProviders(from: $0, to: $1) }
             }
 
-            Section("Refresh") {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Auto-refresh every")
-                        .font(.subheadline)
-                    Picker("", selection: Binding(
-                        get: { viewModel.refreshIntervalMinutes },
-                        set: { viewModel.refreshIntervalMinutes = $0 }
-                    )) {
-                        Text("1m").tag(1.0)
-                        Text("5m").tag(5.0)
-                        Text("15m").tag(15.0)
-                        Text("30m").tag(30.0)
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
+            Section("Refresh Interval") {
+                Picker("Auto-refresh every", selection: Binding(
+                    get: { viewModel.refreshIntervalMinutes },
+                    set: { viewModel.refreshIntervalMinutes = $0 }
+                )) {
+                    Text("1 min").tag(1.0)
+                    Text("5 min").tag(5.0)
+                    Text("15 min").tag(15.0)
+                    Text("30 min").tag(30.0)
                 }
+                .pickerStyle(.segmented)
             }
 
             Section("Appearance") {
@@ -46,7 +43,6 @@ struct SettingsView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                .labelsHidden()
             }
 
             Section("System") {
@@ -59,17 +55,19 @@ struct SettingsView: View {
                     get: { viewModel.startOnLogin },
                     set: { viewModel.startOnLogin = $0 }
                 ))
+            }
 
+            Section {
                 Button(role: .destructive) {
                     NSApplication.shared.terminate(nil)
                 } label: {
-                    Text("Quit PetruUsage")
+                    Label("Quit PetruUsage", systemImage: "power")
                         .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
         }
         .formStyle(.grouped)
-        .frame(width: 350, height: 520)
+        .frame(width: 360, height: 520)
         .navigationTitle("Settings")
     }
 }

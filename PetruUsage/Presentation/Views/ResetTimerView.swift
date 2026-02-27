@@ -17,8 +17,7 @@ struct ResetTimerView: View {
     }
 
     private func formatResetTime() -> String {
-        let now = Date()
-        let remaining = resetsAt.timeIntervalSince(now)
+        let remaining = resetsAt.timeIntervalSince(Date())
 
         if remaining <= 0 {
             return "Reset pending"

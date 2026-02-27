@@ -3,12 +3,13 @@ import XCTest
 
 final class ModelsTests: XCTestCase {
     func testProviderCasesExist() {
-        XCTAssertEqual(Provider.allCases.count, 5)
+        XCTAssertEqual(Provider.allCases.count, 6)
         XCTAssertEqual(Provider.claude.displayName, "Claude")
         XCTAssertEqual(Provider.cursor.displayName, "Cursor")
         XCTAssertEqual(Provider.codex.displayName, "Codex")
         XCTAssertEqual(Provider.antigravity.displayName, "Gemini")
         XCTAssertEqual(Provider.kiro.displayName, "Kiro")
+        XCTAssertEqual(Provider.openrouter.displayName, "OpenRouter")
     }
 
     func testProviderIdentifiable() {

@@ -5,11 +5,11 @@ struct ProviderCardView: View {
     let status: ProviderStatus
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 8) {
             // Provider header
-            HStack(spacing: 6) {
+            HStack(spacing: 8) {
                 Image(systemName: provider.iconName)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(provider.brandColor)
 
                 Text(provider.displayName)
@@ -17,13 +17,13 @@ struct ProviderCardView: View {
 
                 if let result = status.result, let plan = result.plan {
                     Text(plan)
-                        .font(.caption2)
+                        .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 6)
-                        .padding(.vertical, 1)
+                        .padding(.vertical, 2)
                         .background(
                             Capsule()
-                                .fill(.quaternary)
+                                .fill(provider.brandColor.opacity(0.1))
                         )
                 }
 
@@ -40,13 +40,13 @@ struct ProviderCardView: View {
             case .idle:
                 Text("Waiting...")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.tertiary)
 
             case .loading:
                 EmptyView()
 
             case .loaded(let result):
-                VStack(spacing: 4) {
+                VStack(spacing: 6) {
                     ForEach(result.lines) { line in
                         MetricLineView(line: line, brandColor: provider.brandColor)
                     }
@@ -67,15 +67,15 @@ struct ProviderCardView: View {
                 EmptyView()
             }
         }
-        .padding(10)
+        .padding(12)
         .background(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: 10)
                 .fill(.background)
-                .shadow(color: .black.opacity(0.05), radius: 1, y: 1)
+                .shadow(color: .black.opacity(0.06), radius: 2, y: 1)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .strokeBorder(.quaternary, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: 10)
+                .strokeBorder(provider.brandColor.opacity(0.15), lineWidth: 1)
         )
     }
 }
@@ -87,16 +87,16 @@ struct MetricLineView: View {
     var body: some View {
         switch line {
         case .progress(let metric):
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 HStack {
                     Text(metric.label)
-                        .font(.caption)
+                        .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                     Spacer()
                     Text(metric.formattedPercentage)
-                        .font(.caption)
+                        .font(.system(size: 11, weight: .medium))
                         .monospacedDigit()
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(metric.fraction >= 0.9 ? .red : .primary)
                 }
 
                 ProgressBarView(fraction: metric.fraction, color: brandColor)
@@ -109,28 +109,28 @@ struct MetricLineView: View {
         case .text(let metric):
             HStack {
                 Text(metric.label)
-                    .font(.caption)
+                    .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                 Spacer()
                 Text(metric.value)
-                    .font(.caption)
+                    .font(.system(size: 11, weight: .medium))
                     .monospacedDigit()
             }
 
         case .badge(let metric):
             HStack {
                 Text(metric.label)
-                    .font(.caption)
+                    .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                 Spacer()
                 Text(metric.text)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 6)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Color(hex: metric.color))
+                    .padding(.horizontal, 8)
                     .padding(.vertical, 2)
                     .background(
                         Capsule()
-                            .fill(Color(hex: metric.color).opacity(0.2))
+                            .fill(Color(hex: metric.color).opacity(0.15))
                     )
             }
         }

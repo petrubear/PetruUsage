@@ -63,6 +63,7 @@ final class UsageViewModelTests: XCTestCase {
 
 final class MockSettings: SettingsPort {
     var enabledProviders: Set<Provider> = Set(Provider.allCases)
+    var providerOrder: [Provider] = Provider.visibleCases
     var refreshInterval: TimeInterval = 300
     var hideFromDock: Bool = false
     var startOnLogin: Bool = false
@@ -78,5 +79,9 @@ final class MockSettings: SettingsPort {
         } else {
             enabledProviders.remove(provider)
         }
+    }
+
+    func setProviderOrder(_ order: [Provider]) {
+        providerOrder = order
     }
 }
